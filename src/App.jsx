@@ -73,41 +73,33 @@ const plans = [
   },
 ];
 
-const STRIPE_PUBLISHABLE_KEY = getEnv(
-  "VITE_STRIPE_PUBLISHABLE_KEY",
-  "pk_test_replace_me"
-);
-const PRICE_IDS = {
-  basic_small: "price_basic_small_replace",
-  basic_medium: "price_basic_medium_replace",
-  basic_large: "price_basic_large_replace",
-  essential_small: "price_essential_small_replace",
-  essential_medium: "price_essential_medium_replace",
-  essential_large: "price_essential_large_replace",
-  premium_small: "price_premium_small_replace",
-  premium_medium: "price_premium_medium_replace",
-  premium_large: "price_premium_large_replace",
+// ---- Lemon Squeezy checkout links ----
+const PRICE_LINKS = {
+  // Basic
+  basic_small:  "https://pawbox-uk-site.lemonsqueezy.com/buy/3e035397-6524-4822-8c61-e03b25e699a0",
+  basic_medium: "https://pawbox-uk-site.lemonsqueezy.com/buy/5e7549bd-b03b-42fd-95b8-6e05898cf66c",
+  basic_large:  "https://pawbox-uk-site.lemonsqueezy.com/buy/c845d1da-0d1e-43ef-b6e5-5028d1976e63",
+
+  // Essential
+  essential_small:  "https://pawbox-uk-site.lemonsqueezy.com/buy/ce24d7a2-0aef-4eeb-bf32-19e695e1b76d",
+  essential_medium: "https://pawbox-uk-site.lemonsqueezy.com/buy/6b1cf30f-e69f-43af-b8e9-838405770a8e",
+  essential_large:  "https://pawbox-uk-site.lemonsqueezy.com/buy/10194126-148f-4f2b-9784-03736e33d30f",
+
+  // Premium
+  premium_small:  "https://pawbox-uk-site.lemonsqueezy.com/buy/c804a977-3b49-499d-ad84-26813a24af91",
+  premium_medium: "https://pawbox-uk-site.lemonsqueezy.com/buy/3bbe0a36-288c-4a3e-92fb-71fd7e38dd3c",
+  premium_large:  "https://pawbox-uk-site.lemonsqueezy.com/buy/c2d45d26-a3ca-4818-a4d7-49ee656b4e5e",
 };
 
+
 async function handleCheckout(planId, weightKey) {
-  const priceId = PRICE_IDS[`${planId}_${weightKey}`];
-  const isPlaceholder =
-    !STRIPE_PUBLISHABLE_KEY ||
-    STRIPE_PUBLISHABLE_KEY === "pk_test_replace_me";
-  if (isPlaceholder || !priceId) {
-    alert(
-      "Demo: configure VITE_STRIPE_PUBLISHABLE_KEY and PRICE_IDS to enable checkout."
-    );
+  const key = `${planId}_${weightKey}`;
+  const url = PRICE_LINKS[key];
+  if (!url) {
+    alert("Checkout link not found for this selection.");
     return;
   }
-  const stripe = await loadStripe(STRIPE_PUBLISHABLE_KEY);
-  const { error } = await stripe.redirectToCheckout({
-    lineItems: [{ price: priceId, quantity: 1 }],
-    mode: "subscription",
-    successUrl: `${window.location.origin}?status=success`,
-    cancelUrl: `${window.location.origin}?status=cancel`,
-  });
-  if (error) alert(error.message);
+  window.open(url, "_blank");
 }
 
 // ---- Motion ----
@@ -117,21 +109,35 @@ const fadeUp = {
 };
 
 export default function App() {
+  const [selectedPlan, setSelectedPlan] = useState("essential");
+  const [selectedWeight, setSelectedWeight] = useState("medium");
+
   return (
-    <div
-      className="min-h-screen bg-white"
-      style={{ fontFamily: "Inter, ui-sans-serif, system-ui" }}
-    >
+    <div className="min-h-screen bg-white" style={{ fontFamily: "Inter, ui-sans-serif, system-ui" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@500;600;700&display=swap');
         .font-serif { font-family: 'Playfair Display', Georgia, serif; }
       `}</style>
+
       <Header />
       <main>
         <Hero />
-        <Plans />
+        <Plans
+          onChoose={(planId, weightKey) => {
+            setSelectedPlan(planId);
+            if (weightKey) setSelectedWeight(weightKey);
+            // scroll smooth to Personalise
+            const el = document.getElementById("personalise");
+            if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+          }}
+        />
         <Why />
-        <Personalise />
+        <Personalise
+          plan={selectedPlan}
+          setPlan={setSelectedPlan}
+          weight={selectedWeight}
+          setWeight={setSelectedWeight}
+        />
         <Testimonials />
         <About />
       </main>
@@ -139,6 +145,7 @@ export default function App() {
     </div>
   );
 }
+
 
 // -------------------------------- Header
 function Header() {
@@ -300,7 +307,7 @@ function Hero() {
 }
 
 // -------------------------------- Plans (centred)
-function Plans() {
+function Plans({ onChoose }) {
   return (
     <section id="plans" className="relative py-20" style={{ background: PALETTE.cream }}>
       <BgSoft
@@ -318,6 +325,7 @@ function Plans() {
             Three clear tiers, price by pet weight.
           </p>
         </div>
+
         <div className="mt-10 grid gap-8 md:grid-cols-3 place-items-center">
           {plans.map((plan) => (
             <motion.div
@@ -334,13 +342,15 @@ function Plans() {
                 <p className="text-sm mb-6" style={{ color: PALETTE.subtle }}>
                   {plan.tagline}
                 </p>
+
                 <div className="flex justify-center gap-4 mb-6 w-full flex-wrap">
                   {Object.entries(plan.pricing).map(([k, v]) => (
-                    <div
+                    <button
+                      type="button"
                       key={k}
-                      className="flex flex-col items-center justify-center rounded-2xl border px-4 py-3 w-24 h-20"
+                      onClick={() => onChoose?.(plan.id, k)}
+                      className="flex flex-col items-center justify-center rounded-2xl border px-4 py-3 w-24 h-20 hover:shadow-sm transition"
                       style={{ borderColor: PALETTE.border }}
-                      aria-label={`Price for ${k === "small" ? "<10 kg" : k === "medium" ? "10–20 kg" : ">20 kg"}: £${v.toFixed(2)}`}
                     >
                       <div className="text-[11px] mb-1" style={{ color: PALETTE.subtle }}>
                         {k === "small" ? "<10 kg" : k === "medium" ? "10–20 kg" : ">20 kg"}
@@ -348,9 +358,10 @@ function Plans() {
                       <div className="font-serif font-semibold text-lg" style={{ color: PALETTE.ink }}>
                         £{v.toFixed(2)}
                       </div>
-                    </div>
+                    </button>
                   ))}
                 </div>
+
                 <ul className="space-y-2 text-sm" style={{ color: PALETTE.text }}>
                   {plan.features.map((f) => (
                     <li key={f} className="flex items-start gap-2">
@@ -359,7 +370,10 @@ function Plans() {
                   ))}
                 </ul>
               </div>
+
               <button
+                type="button"
+                onClick={() => onChoose?.(plan.id)}
                 className={cx(
                   "mt-6 inline-block rounded-full px-6 py-3 text-sm font-medium shadow-sm hover:shadow-md transition",
                   RING
