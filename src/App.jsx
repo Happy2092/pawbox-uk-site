@@ -13,13 +13,13 @@ import {
 import { loadStripe } from "@stripe/stripe-js";
 
 /**
- * PawBox UK – Site complet (fix: BgSoft unique + tests légers)
- * - Corrige l'erreur "Identifier 'BgSoft' has already been declared" en définissant BgSoft **une seule fois**
- * - Conserve toutes les sections: Header, Hero, Plans, Why, Personalize, Testimonials, About, Footer
- * - Arrière‑plans animaux discrets via BgSoft (faible opacité + blur)
- * - Images de chiens/chats fonctionnelles (Unsplash)
- * - Accès ENV Stripe sécurisé (pas de crash hors Vite)
- * - Ajout de **self-tests non intrusifs** (console.assert) pour détecter les régressions
+ * PawBox UK – Full site (EN-UK version)
+ * - All UI text translated to English (UK tone)
+ * - Keeps sections: Header, Hero, Plans, Why, Personalise, Testimonials, About, Footer
+ * - Soft animal background images via BgSoft (low opacity + blur)
+ * - Dog/cat images with graceful fallbacks (Unsplash/Pexels/placeholder)
+ * - Safe Stripe env access (doesn’t crash if key missing)
+ * - Light self-tests (console.assert) in dev only
  */
 
 // ---- Design tokens ----
@@ -40,38 +40,43 @@ const cx = (...a) => a.filter(Boolean).join(" ");
 
 // ---- Safe env (works in Vite & sandbox) ----
 function getEnv(key, fallback = undefined) {
-  const viteVal = typeof import.meta !== "undefined" ? import.meta?.env?.[key] : undefined;
-  const nodeVal = typeof process !== "undefined" ? process?.env?.[key] : undefined;
+  const viteVal =
+    typeof import.meta !== "undefined" ? import.meta?.env?.[key] : undefined;
+  const nodeVal =
+    typeof process !== "undefined" ? process?.env?.[key] : undefined;
   return viteVal ?? nodeVal ?? fallback;
 }
 
-// ---- Données ----
+// ---- Data ----
 const plans = [
   {
     id: "basic",
     name: "Basic",
-    tagline: "Starter bien-être",
-    features: ["Friandise naturelle", "Jouet simple", "Conseils mensuels"],
+    tagline: "Everyday starter",
+    features: ["Natural treat", "Simple toy", "Monthly tips"],
     pricing: { small: 21.99, medium: 24.99, large: 27.99 },
   },
   {
     id: "essential",
     name: "Essential",
-    tagline: "Équilibre nutrition & jeu",
-    features: ["Recettes adaptées", "2 friandises saines", "Jouet durable"],
+    tagline: "Balanced nutrition & play",
+    features: ["Tailored recipes", "2 healthy treats", "Durable toy"],
     pricing: { small: 32.99, medium: 36.99, large: 39.99 },
     highlight: true,
   },
   {
     id: "premium",
     name: "Premium",
-    tagline: "Expérience complète",
-    features: ["Sélection premium", "2 jouets + accessoire", "Cadeau surprise"],
+    tagline: "Complete experience",
+    features: ["Premium selection", "2 toys + accessory", "Surprise gift"],
     pricing: { small: 49.99, medium: 54.99, large: 59.99 },
   },
 ];
 
-const STRIPE_PUBLISHABLE_KEY = getEnv("VITE_STRIPE_PUBLISHABLE_KEY", "pk_test_replace_me");
+const STRIPE_PUBLISHABLE_KEY = getEnv(
+  "VITE_STRIPE_PUBLISHABLE_KEY",
+  "pk_test_replace_me"
+);
 const PRICE_IDS = {
   basic_small: "price_basic_small_replace",
   basic_medium: "price_basic_medium_replace",
@@ -86,9 +91,13 @@ const PRICE_IDS = {
 
 async function handleCheckout(planId, weightKey) {
   const priceId = PRICE_IDS[`${planId}_${weightKey}`];
-  const isPlaceholder = !STRIPE_PUBLISHABLE_KEY || STRIPE_PUBLISHABLE_KEY === "pk_test_replace_me";
+  const isPlaceholder =
+    !STRIPE_PUBLISHABLE_KEY ||
+    STRIPE_PUBLISHABLE_KEY === "pk_test_replace_me";
   if (isPlaceholder || !priceId) {
-    alert("Démonstration : configurez VITE_STRIPE_PUBLISHABLE_KEY et PRICE_IDS pour activer le paiement.");
+    alert(
+      "Demo: configure VITE_STRIPE_PUBLISHABLE_KEY and PRICE_IDS to enable checkout."
+    );
     return;
   }
   const stripe = await loadStripe(STRIPE_PUBLISHABLE_KEY);
@@ -102,11 +111,17 @@ async function handleCheckout(planId, weightKey) {
 }
 
 // ---- Motion ----
-const fadeUp = { initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0, transition: { duration: 0.5 } } };
+const fadeUp = {
+  initial: { opacity: 0, y: 12 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+};
 
 export default function App() {
   return (
-    <div className="min-h-screen bg-white" style={{ fontFamily: "Inter, ui-sans-serif, system-ui" }}>
+    <div
+      className="min-h-screen bg-white"
+      style={{ fontFamily: "Inter, ui-sans-serif, system-ui" }}
+    >
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@500;600;700&display=swap');
         .font-serif { font-family: 'Playfair Display', Georgia, serif; }
@@ -116,7 +131,7 @@ export default function App() {
         <Hero />
         <Plans />
         <Why />
-        <Personalize />
+        <Personalise />
         <Testimonials />
         <About />
       </main>
@@ -128,35 +143,60 @@ export default function App() {
 // -------------------------------- Header
 function Header() {
   const [open, setOpen] = useState(false);
+  const nav = [
+    { href: "#plans", label: "Plans" },
+    { href: "#why", label: "Why us" },
+    { href: "#personalise", label: "Personalise" },
+    { href: "#about", label: "About" },
+    { href: "#contact", label: "Contact" },
+  ];
   return (
-    <header className="fixed top-0 inset-x-0 z-50 backdrop-blur supports-[backdrop-filter]:bg-white/70 bg-white/80 border-b" style={{ borderColor: PALETTE.border }}>
+    <header
+      className="fixed top-0 inset-x-0 z-50 backdrop-blur supports-[backdrop-filter]:bg-white/70 bg-white/80 border-b"
+      style={{ borderColor: PALETTE.border }}
+    >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         <a href="#home" className={cx("flex items-center gap-2", RING)}>
-          <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl" style={{ background: PALETTE.accent, color: "white" }}>
+          <span
+            className="inline-flex h-9 w-9 items-center justify-center rounded-xl"
+            style={{ background: PALETTE.accent, color: "white" }}
+          >
             <PawPrint className="h-5 w-5" />
           </span>
-          <span className="font-serif text-xl md:text-2xl tracking-tight" style={{ color: PALETTE.ink }}>PawBox UK</span>
+          <span
+            className="font-serif text-xl md:text-2xl tracking-tight"
+            style={{ color: PALETTE.ink }}
+          >
+            PawBox UK
+          </span>
         </a>
 
         <nav className="hidden md:flex items-center gap-8 text-sm" style={{ color: PALETTE.text }}>
-          {[
-            { href: "#plans", label: "Abonnements" },
-            { href: "#why", label: "Pourquoi nous" },
-            { href: "#personalize", label: "Personnaliser" },
-            { href: "#about", label: "À propos" },
-            { href: "#contact", label: "Contact" },
-          ].map((l) => (
-            <a key={l.href} href={l.href} className="hover:text-black/80">{l.label}</a>
+          {nav.map((l) => (
+            <a key={l.href} href={l.href} className="hover:text-black/80">
+              {l.label}
+            </a>
           ))}
         </nav>
 
         <div className="hidden md:block">
-          <a href="#personalize" className={cx("inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-medium shadow-sm transition hover:shadow-md", RING)} style={{ background: PALETTE.accent, color: "white" }}>
-            <Sparkles className="h-4 w-4" /> Commencer
+          <a
+            href="#personalise"
+            className={cx(
+              "inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-medium shadow-sm transition hover:shadow-md",
+              RING
+            )}
+            style={{ background: PALETTE.accent, color: "white" }}
+          >
+            <Sparkles className="h-4 w-4" /> Get started
           </a>
         </div>
 
-        <button className={cx("md:hidden p-2 rounded-lg", RING)} onClick={() => setOpen(!open)} aria-label="Menu">
+        <button
+          className={cx("md:hidden p-2 rounded-lg", RING)}
+          onClick={() => setOpen(!open)}
+          aria-label="Open menu"
+        >
           {open ? <X /> : <Menu />}
         </button>
       </div>
@@ -164,17 +204,26 @@ function Header() {
       {open && (
         <div className="md:hidden border-t bg-white" style={{ borderColor: PALETTE.border }}>
           <div className="px-4 py-4 flex flex-col gap-4">
-            {[
-              { href: "#plans", label: "Abonnements" },
-              { href: "#why", label: "Pourquoi nous" },
-              { href: "#personalize", label: "Personnaliser" },
-              { href: "#about", label: "À propos" },
-              { href: "#contact", label: "Contact" },
-            ].map((item) => (
-              <a key={item.href} href={item.href} className="py-1" onClick={() => setOpen(false)}>{item.label}</a>
+            {nav.map((item) => (
+              <a
+                key={item.href}
+                href={item.href}
+                className="py-1"
+                onClick={() => setOpen(false)}
+              >
+                {item.label}
+              </a>
             ))}
-            <a href="#personalize" onClick={() => setOpen(false)} className={cx("mt-2 inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-medium shadow-sm", RING)} style={{ background: PALETTE.accent, color: "white", width: "fit-content" }}>
-              <Sparkles className="h-4 w-4" /> Commencer
+            <a
+              href="#personalise"
+              onClick={() => setOpen(false)}
+              className={cx(
+                "mt-2 inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-medium shadow-sm",
+                RING
+              )}
+              style={{ background: PALETTE.accent, color: "white", width: "fit-content" }}
+            >
+              <Sparkles className="h-4 w-4" /> Get started
             </a>
           </div>
         </div>
@@ -183,57 +232,91 @@ function Header() {
   );
 }
 
-// -------------------------------- Hero (photo chien)
+// -------------------------------- Hero
 function Hero() {
   return (
     <section id="home" className="relative pt-28 md:pt-32">
-      <BgSoft images={[
-        "https://images.unsplash.com/photo-1543466835-00a7907e9de1?q=80&w=1200&auto=format&fit=crop",
-        "https://images.unsplash.com/photo-1518791841217-8f162f1e1131?q=80&w=1200&auto=format&fit=crop",
-      ]} />
+      <BgSoft
+        images={[
+          "https://images.unsplash.com/photo-1543466835-00a7907e9de1?q=80&w=1200&auto=format&fit=crop",
+          "https://images.unsplash.com/photo-1518791841217-8f162f1e1131?q=80&w=1200&auto=format&fit=crop",
+        ]}
+      />
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 grid md:grid-cols-12 gap-10 items-center">
         <motion.div {...fadeUp} className="md:col-span-7">
-          <h1 className="font-serif text-5xl md:text-6xl tracking-tight" style={{ color: PALETTE.ink }}>
-            Une box <span style={{ color: PALETTE.accent }}>premium</span> pour chiens et chats
+          <h1
+            className="font-serif text-5xl md:text-6xl tracking-tight"
+            style={{ color: PALETTE.ink }}
+          >
+            A <span style={{ color: PALETTE.accent }}>premium</span> monthly box
+            for dogs & cats
           </h1>
           <p className="mt-5 leading-relaxed" style={{ color: PALETTE.text }}>
-            Friandises saines, accessoires de qualité et surprises chaque mois. Livraison rapide au Royaume‑Uni.
+            Healthy treats, quality accessories and little surprises every
+            month. Fast UK delivery.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <a href="#personalize" className={cx("rounded-full px-6 py-3 text-sm font-medium shadow-sm hover:shadow-md transition", RING)} style={{ background: PALETTE.accent, color: "white" }}>Personnaliser mon abonnement</a>
-            <a href="#plans" className={cx("rounded-full px-6 py-3 text-sm font-medium border", RING)} style={{ borderColor: PALETTE.border, color: PALETTE.ink }}>Voir les formules</a>
+            <a
+              href="#personalise"
+              className={cx(
+                "rounded-full px-6 py-3 text-sm font-medium shadow-sm hover:shadow-md transition",
+                RING
+              )}
+              style={{ background: PALETTE.accent, color: "white" }}
+            >
+              Personalise my box
+            </a>
+            <a
+              href="#plans"
+              className={cx(
+                "rounded-full px-6 py-3 text-sm font-medium border",
+                RING
+              )}
+              style={{ borderColor: PALETTE.border, color: PALETTE.ink }}
+            >
+              See plans
+            </a>
           </div>
         </motion.div>
         <motion.div {...fadeUp} className="md:col-span-5">
-          <div className="aspect-[4/3] w-full rounded-3xl overflow-hidden border" style={{ borderColor: PALETTE.border }}>
-          <SafeImg
-            srcSet={[
-              "https://images.unsplash.com/photo-1518791841217-8f162f1e1131?q=80&w=1600&auto=format&fit=crop",
-              "https://images.pexels.com/photos/1170986/pexels-photo-1170986.jpeg",
-              "https://images.pexels.com/photos/2071873/pexels-photo-2071873.jpeg"
-            ]}
-            alt="Chat détendu"
-            className="w-full h-full object-cover"
-          />
-        </div>
+          <div
+            className="aspect-[4/3] w-full rounded-3xl overflow-hidden border"
+            style={{ borderColor: PALETTE.border }}
+          >
+            <SafeImg
+              srcSet={[
+                "https://images.unsplash.com/photo-1518791841217-8f162f1e1131?q=80&w=1600&auto=format&fit=crop",
+                "https://images.pexels.com/photos/1170986/pexels-photo-1170986.jpeg",
+                "https://images.pexels.com/photos/2071873/pexels-photo-2071873.jpeg",
+              ]}
+              alt="Relaxed cat"
+              className="w-full h-full object-cover"
+            />
+          </div>
         </motion.div>
       </div>
     </section>
   );
 }
 
-// -------------------------------- Plans (centrés)
+// -------------------------------- Plans (centred)
 function Plans() {
   return (
     <section id="plans" className="relative py-20" style={{ background: PALETTE.cream }}>
-      <BgSoft images={[
-        "https://images.unsplash.com/photo-1507149833265-60c372daea22?q=80&w=1200&auto=format&fit=crop",
-        "https://images.unsplash.com/photo-1494256997604-768d1f608cac?q=80&w=1200&auto=format&fit=crop",
-      ]} />
+      <BgSoft
+        images={[
+          "https://images.unsplash.com/photo-1507149833265-60c372daea22?q=80&w=1200&auto=format&fit=crop",
+          "https://images.unsplash.com/photo-1494256997604-768d1f608cac?q=80&w=1200&auto=format&fit=crop",
+        ]}
+      />
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-2xl mx-auto">
-          <h2 className="font-serif text-4xl md:text-5xl" style={{ color: PALETTE.ink }}>Choisissez votre formule</h2>
-          <p className="mt-3" style={{ color: PALETTE.text }}>Trois niveaux clairs, tarification selon le poids.</p>
+          <h2 className="font-serif text-4xl md:text-5xl" style={{ color: PALETTE.ink }}>
+            Choose your plan
+          </h2>
+          <p className="mt-3" style={{ color: PALETTE.text }}>
+            Three clear tiers, price by pet weight.
+          </p>
         </div>
         <div className="mt-10 grid gap-8 md:grid-cols-3 place-items-center">
           {plans.map((plan) => (
@@ -245,26 +328,45 @@ function Plans() {
               style={{ borderColor: plan.highlight ? "#FCD34D80" : PALETTE.border }}
             >
               <div>
-                <h3 className="font-serif text-2xl mb-1" style={{ color: PALETTE.ink }}>{plan.name}</h3>
-                <p className="text-sm mb-6" style={{ color: PALETTE.subtle }}>{plan.tagline}</p>
+                <h3 className="font-serif text-2xl mb-1" style={{ color: PALETTE.ink }}>
+                  {plan.name}
+                </h3>
+                <p className="text-sm mb-6" style={{ color: PALETTE.subtle }}>
+                  {plan.tagline}
+                </p>
                 <div className="flex justify-center gap-4 mb-6 w-full flex-wrap">
                   {Object.entries(plan.pricing).map(([k, v]) => (
-                    <div key={k} className="flex flex-col items-center justify-center rounded-2xl border px-4 py-3 w-24 h-20" style={{ borderColor: PALETTE.border }}>
+                    <div
+                      key={k}
+                      className="flex flex-col items-center justify-center rounded-2xl border px-4 py-3 w-24 h-20"
+                      style={{ borderColor: PALETTE.border }}
+                      aria-label={`Price for ${k === "small" ? "<10 kg" : k === "medium" ? "10–20 kg" : ">20 kg"}: £${v.toFixed(2)}`}
+                    >
                       <div className="text-[11px] mb-1" style={{ color: PALETTE.subtle }}>
                         {k === "small" ? "<10 kg" : k === "medium" ? "10–20 kg" : ">20 kg"}
                       </div>
-                      <div className="font-serif font-semibold text-lg" style={{ color: PALETTE.ink }}>£{v.toFixed(2)}</div>
+                      <div className="font-serif font-semibold text-lg" style={{ color: PALETTE.ink }}>
+                        £{v.toFixed(2)}
+                      </div>
                     </div>
                   ))}
                 </div>
                 <ul className="space-y-2 text-sm" style={{ color: PALETTE.text }}>
                   {plan.features.map((f) => (
-                    <li key={f} className="flex items-start gap-2"><Check className="h-4 w-4" style={{ color: PALETTE.accent }} /> {f}</li>
+                    <li key={f} className="flex items-start gap-2">
+                      <Check className="h-4 w-4" style={{ color: PALETTE.accent }} /> {f}
+                    </li>
                   ))}
                 </ul>
               </div>
-              <button className={cx("mt-6 inline-block rounded-full px-6 py-3 text-sm font-medium shadow-sm hover:shadow-md transition", RING)} style={{ background: PALETTE.accent, color: "white" }}>
-                Choisir {plan.name}
+              <button
+                className={cx(
+                  "mt-6 inline-block rounded-full px-6 py-3 text-sm font-medium shadow-sm hover:shadow-md transition",
+                  RING
+                )}
+                style={{ background: PALETTE.accent, color: "white" }}
+              >
+                Choose {plan.name}
               </button>
             </motion.div>
           ))}
@@ -274,44 +376,67 @@ function Plans() {
   );
 }
 
-// -------------------------------- Why (photo chat)
+// -------------------------------- Why
 function Why() {
   const items = [
-    { icon: <Leaf />, title: "Ingrédients sains", text: "Friandises naturelles, recettes sans artifices." },
-    { icon: <Truck />, title: "Livraison UK rapide", text: "Expédié chaque mois, suivi clair." },
-    { icon: <Shield />, title: "Satisfait ou remboursé", text: "Annulation facile, support réactif." },
+    {
+      icon: <Leaf />,
+      title: "Healthy ingredients",
+      text: "Natural treats, no unnecessary additives.",
+    },
+    { icon: <Truck />, title: "Fast UK delivery", text: "Shipped monthly with clear tracking." },
+    { icon: <Shield />, title: "Money-back guarantee", text: "Easy cancellation, responsive support." },
   ];
   return (
     <section id="why" className="relative py-20 bg-white">
-      <BgSoft images={[
-        "https://images.unsplash.com/photo-1592194996308-7b43878e84a3?q=80&w=1200&auto=format&fit=crop",
-        "https://images.unsplash.com/photo-1505628346881-b72b27e84530?q=80&w=1200&auto=format&fit=crop",
-      ]} />
+      <BgSoft
+        images={[
+          "https://images.unsplash.com/photo-1592194996308-7b43878e84a3?q=80&w=1200&auto=format&fit=crop",
+          "https://images.unsplash.com/photo-1505628346881-b72b27e84530?q=80&w=1200&auto=format&fit=crop",
+        ]}
+      />
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 grid md:grid-cols-12 gap-10 items-center">
         <motion.div {...fadeUp} className="md:col-span-6">
-          <h2 className="font-serif text-4xl md:text-5xl" style={{ color: PALETTE.ink }}>Pourquoi PawBox ?</h2>
-          <p className="mt-3" style={{ color: PALETTE.text }}>Pensée pour le bien‑être de votre animal et la sérénité des propriétaires.</p>
+          <h2 className="font-serif text-4xl md:text-5xl" style={{ color: PALETTE.ink }}>
+            Why PawBox?
+          </h2>
+          <p className="mt-3" style={{ color: PALETTE.text }}>
+            Designed for your pet’s wellbeing and your peace of mind.
+          </p>
           <div className="mt-6 grid sm:grid-cols-3 gap-4">
             {items.map((it, i) => (
-              <div key={i} className="rounded-2xl bg-white/90 backdrop-blur p-5 border" style={{ borderColor: PALETTE.border }}>
-                <div className="mb-2" style={{ color: PALETTE.accent }}>{it.icon}</div>
-                <div className="font-medium" style={{ color: PALETTE.ink }}>{it.title}</div>
-                <div className="text-sm mt-1" style={{ color: PALETTE.text }}>{it.text}</div>
+              <div
+                key={i}
+                className="rounded-2xl bg-white/90 backdrop-blur p-5 border"
+                style={{ borderColor: PALETTE.border }}
+              >
+                <div className="mb-2" style={{ color: PALETTE.accent }}>
+                  {it.icon}
+                </div>
+                <div className="font-medium" style={{ color: PALETTE.ink }}>
+                  {it.title}
+                </div>
+                <div className="text-sm mt-1" style={{ color: PALETTE.text }}>
+                  {it.text}
+                </div>
               </div>
             ))}
           </div>
         </motion.div>
         <motion.div {...fadeUp} className="md:col-span-6">
-          <div className="aspect-[4/3] w-full rounded-3xl overflow-hidden border" style={{ borderColor: PALETTE.border }}>
+          <div
+            className="aspect-[4/3] w-full rounded-3xl overflow-hidden border"
+            style={{ borderColor: PALETTE.border }}
+          >
             <SafeImg
-            srcSet={[
-              "https://images.unsplash.com/photo-1516366434321-728a48e6b7b3?q=80&w=1600&auto=format&fit=crop",
-              "https://images.pexels.com/photos/1108099/pexels-photo-1108099.jpeg",
-              "https://images.pexels.com/photos/573186/pexels-photo-573186.jpeg"
-            ]}
-            alt="Chat et chien ensemble"
-            className="w-full h-full object-cover"
-          />
+              srcSet={[
+                "https://images.unsplash.com/photo-1516366434321-728a48e6b7b3?q=80&w=1600&auto=format&fit=crop",
+                "https://images.pexels.com/photos/1108099/pexels-photo-1108099.jpeg",
+                "https://images.pexels.com/photos/573186/pexels-photo-573186.jpeg",
+              ]}
+              alt="Cat and dog together"
+              className="w-full h-full object-cover"
+            />
           </div>
         </motion.div>
       </div>
@@ -319,8 +444,8 @@ function Why() {
   );
 }
 
-// -------------------------------- Personalize
-function Personalize() {
+// -------------------------------- Personalise
+function Personalise() {
   const [animal, setAnimal] = useState("dog");
   const [age, setAge] = useState("adult");
   const [weight, setWeight] = useState("small");
@@ -333,50 +458,90 @@ function Personalize() {
   }, [plan, weight]);
 
   return (
-    <section id="personalize" className="py-20" style={{ background: PALETTE.cream }}>
+    <section id="personalise" className="py-20" style={{ background: PALETTE.cream }}>
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-2xl mx-auto">
-          <h2 className="font-serif text-4xl md:text-5xl" style={{ color: PALETTE.ink }}>Personnaliser mon abonnement</h2>
-          <p className="mt-3" style={{ color: PALETTE.text }}>Adaptez la box au profil de votre compagnon.</p>
+          <h2 className="font-serif text-4xl md:text-5xl" style={{ color: PALETTE.ink }}>
+            Personalise your box
+          </h2>
+          <p className="mt-3" style={{ color: PALETTE.text }}>
+            Tailor the box to your companion’s profile.
+          </p>
         </div>
 
         <div className="mt-10 grid lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 rounded-3xl bg-white p-6 border" style={{ borderColor: PALETTE.border }}>
             <div className="grid sm:grid-cols-2 gap-5">
-              <Field label="Type d'animal">
-                <select value={animal} onChange={(e) => setAnimal(e.target.value)} className={cx("w-full rounded-xl border px-3 py-2", RING)} style={{ borderColor: PALETTE.border }}>
-                  <option value="dog">Chien</option>
-                  <option value="cat">Chat</option>
+              <Field label="Pet type">
+                <select
+                  value={animal}
+                  onChange={(e) => setAnimal(e.target.value)}
+                  className={cx("w-full rounded-xl border px-3 py-2", RING)}
+                  style={{ borderColor: PALETTE.border }}
+                >
+                  <option value="dog">Dog</option>
+                  <option value="cat">Cat</option>
                 </select>
               </Field>
-              <Field label="Âge">
-                <select value={age} onChange={(e) => setAge(e.target.value)} className={cx("w-full rounded-xl border px-3 py-2", RING)} style={{ borderColor: PALETTE.border }}>
-                  <option value="puppy">Jeune</option>
-                  <option value="adult">Adulte</option>
+              <Field label="Age">
+                <select
+                  value={age}
+                  onChange={(e) => setAge(e.target.value)}
+                  className={cx("w-full rounded-xl border px-3 py-2", RING)}
+                  style={{ borderColor: PALETTE.border }}
+                >
+                  <option value="puppy">Young</option>
+                  <option value="adult">Adult</option>
                   <option value="senior">Senior</option>
                 </select>
               </Field>
-              <Field label="Poids">
-                <select value={weight} onChange={(e) => setWeight(e.target.value)} className={cx("w-full rounded-xl border px-3 py-2", RING)} style={{ borderColor: PALETTE.border }}>
+              <Field label="Weight">
+                <select
+                  value={weight}
+                  onChange={(e) => setWeight(e.target.value)}
+                  className={cx("w-full rounded-xl border px-3 py-2", RING)}
+                  style={{ borderColor: PALETTE.border }}
+                >
                   <option value="small">&lt; 10 kg</option>
                   <option value="medium">10 – 20 kg</option>
                   <option value="large">&gt; 20 kg</option>
                 </select>
               </Field>
-              <Field label="Formule">
-                <select value={plan} onChange={(e) => setPlan(e.target.value)} className={cx("w-full rounded-xl border px-3 py-2", RING)} style={{ borderColor: PALETTE.border }}>
+              <Field label="Plan">
+                <select
+                  value={plan}
+                  onChange={(e) => setPlan(e.target.value)}
+                  className={cx("w-full rounded-xl border px-3 py-2", RING)}
+                  style={{ borderColor: PALETTE.border }}
+                >
                   {plans.map((p) => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
                   ))}
                 </select>
               </Field>
-              <Field full label="Nom de l'animal (optionnel)">
-                <input value={name} onChange={(e) => setName(e.target.value)} placeholder="ex. Rocky" className={cx("w-full rounded-xl border px-3 py-2", RING)} style={{ borderColor: PALETTE.border }} />
+              <Field full label="Pet’s name (optional)">
+                <input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g. Rocky"
+                  className={cx("w-full rounded-xl border px-3 py-2", RING)}
+                  style={{ borderColor: PALETTE.border }}
+                />
               </Field>
             </div>
-            <div className="mt-6 rounded-2xl border p-4 text-sm" style={{ background: "#FFFDF8", borderColor: "#FDE68A" }}>
+            <div
+              className="mt-6 rounded-2xl border p-4 text-sm"
+              style={{ background: "#FFFDF8", borderColor: "#FDE68A" }}
+            >
               <p style={{ color: PALETTE.text }}>
-                Prix calculé pour <span className="font-medium">{animal === 'dog' ? 'chien' : 'chat'}</span> {age === 'puppy' ? 'jeune' : age} — {weight === 'small' ? '<10 kg' : weight === 'medium' ? '10–20 kg' : '>20 kg'} — formule <span className="font-medium">{plans.find(p=>p.id===plan)?.name}</span>.
+                Calculated for a <span className="font-medium">{animal === "dog" ? "dog" : "cat"}</span>{" "}
+                {age === "puppy" ? "young" : age} —{" "}
+                {weight === "small" ? "<10 kg" : weight === "medium" ? "10–20 kg" : ">20 kg"} — plan{" "}
+                <span className="font-medium">
+                  {plans.find((p) => p.id === plan)?.name}
+                </span>.
               </p>
             </div>
           </div>
@@ -384,11 +549,22 @@ function Personalize() {
           <div className="rounded-3xl bg-white p-6 border h-fit" style={{ borderColor: PALETTE.border }}>
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-sm" style={{ color: PALETTE.subtle }}>Total mensuel</div>
-                <div className="text-4xl font-serif" style={{ color: PALETTE.ink }}>£{price.toFixed(2)}</div>
+                <div className="text-sm" style={{ color: PALETTE.subtle }}>
+                  Monthly total
+                </div>
+                <div className="text-4xl font-serif" style={{ color: PALETTE.ink }}>
+                  £{price.toFixed(2)}
+                </div>
               </div>
-              <div className="w-24 h-24 rounded-2xl overflow-hidden border" style={{ borderColor: PALETTE.border }}>
-                <img src="https://images.unsplash.com/photo-1555685812-4b943f1cb0eb?q=80&w=1600&auto=format&fit=crop" alt="Snack" className="w-full h-full object-cover" />
+              <div
+                className="w-24 h-24 rounded-2xl overflow-hidden border"
+                style={{ borderColor: PALETTE.border }}
+              >
+                <img
+                  src="https://images.unsplash.com/photo-1555685812-4b943f1cb0eb?q=80&w=1600&auto=format&fit=crop"
+                  alt="Snack"
+                  className="w-full h-full object-cover"
+                />
               </div>
             </div>
             <ul className="mt-6 space-y-2 text-sm">
@@ -398,10 +574,19 @@ function Personalize() {
                 </li>
               ))}
             </ul>
-            <button className={cx("mt-6 w-full rounded-full px-5 py-3 text-sm font-medium shadow-sm hover:shadow-md transition", RING)} style={{ background: PALETTE.accent, color: "white" }} onClick={() => handleCheckout(plan, weight)}>
-              Continuer au paiement
+            <button
+              className={cx(
+                "mt-6 w-full rounded-full px-5 py-3 text-sm font-medium shadow-sm hover:shadow-md transition",
+                RING
+              )}
+              style={{ background: PALETTE.accent, color: "white" }}
+              onClick={() => handleCheckout(plan, weight)}
+            >
+              Continue to checkout
             </button>
-            <p className="mt-3 text-xs" style={{ color: PALETTE.subtle }}>Paiement récurrent, annulation à tout moment.</p>
+            <p className="mt-3 text-xs" style={{ color: PALETTE.subtle }}>
+              Recurring payment, cancel anytime.
+            </p>
           </div>
         </div>
       </div>
@@ -412,22 +597,33 @@ function Personalize() {
 // -------------------------------- Testimonials
 function Testimonials() {
   const items = [
-    { quote: "Mon chien attend sa PawBox chaque mois !", author: "Emily, London" },
-    { quote: "Parfait pour notre chat senior, très qualitatif.", author: "James, Manchester" },
-    { quote: "Service client top et abonnement flexible.", author: "Sophie, Bristol" },
+    { quote: "My dog waits for PawBox every month!", author: "Emily, London" },
+    { quote: "Perfect for our senior cat, great quality.", author: "James, Manchester" },
+    { quote: "Brilliant support and flexible plans.", author: "Sophie, Bristol" },
   ];
   return (
     <section className="py-20 bg-white">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-2xl mx-auto">
-          <h2 className="font-serif text-4xl md:text-5xl" style={{ color: PALETTE.ink }}>Ils adorent déjà</h2>
-          <p className="mt-3" style={{ color: PALETTE.text }}>Quelques retours de nos clients au Royaume‑Uni.</p>
+          <h2 className="font-serif text-4xl md:text-5xl" style={{ color: PALETTE.ink }}>
+            Loved already
+          </h2>
+          <p className="mt-3" style={{ color: PALETTE.text }}>
+            A few words from UK customers.
+          </p>
         </div>
         <div className="mt-10 grid gap-6 md:grid-cols-3">
           {items.map((t, i) => (
-            <motion.figure key={i} {...fadeUp} className="rounded-3xl bg-white p-6 border" style={{ borderColor: PALETTE.border }}>
+            <motion.figure
+              key={i}
+              {...fadeUp}
+              className="rounded-3xl bg-white p-6 border"
+              style={{ borderColor: PALETTE.border }}
+            >
               <blockquote style={{ color: PALETTE.ink }}>“{t.quote}”</blockquote>
-              <figcaption className="mt-4 text-sm" style={{ color: PALETTE.subtle }}>{t.author}</figcaption>
+              <figcaption className="mt-4 text-sm" style={{ color: PALETTE.subtle }}>
+                {t.author}
+              </figcaption>
             </motion.figure>
           ))}
         </div>
@@ -436,26 +632,46 @@ function Testimonials() {
   );
 }
 
-// -------------------------------- About (photo maître + chien)
+// -------------------------------- About
 function About() {
   return (
     <section id="about" className="relative py-20" style={{ background: PALETTE.cream }}>
-      <BgSoft images={[
-        "https://images.unsplash.com/photo-1507149833265-60c372daea22?q=80&w=1200&auto=format&fit=crop",
-        "https://images.unsplash.com/photo-1517423440428-a5a00ad493e8?q=80&w=1200&auto=format&fit=crop",
-      ]} />
+      <BgSoft
+        images={[
+          "https://images.unsplash.com/photo-1507149833265-60c372daea22?q=80&w=1200&auto=format&fit=crop",
+          "https://images.unsplash.com/photo-1517423440428-a5a00ad493e8?q=80&w=1200&auto=format&fit=crop",
+        ]}
+      />
       <div className="relative mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 grid md:grid-cols-2 gap-10 items-center">
         <div>
-          <h2 className="font-serif text-4xl md:text-5xl" style={{ color: PALETTE.ink }}>À propos de PawBox</h2>
-          <p className="mt-4" style={{ color: PALETTE.text }}>Petite équipe basée au Royaume‑Uni, dédiée au bien‑être animal. Nous limitons les emballages et privilégions des produits utiles et sains.</p>
+          <h2 className="font-serif text-4xl md:text-5xl" style={{ color: PALETTE.ink }}>
+            About PawBox
+          </h2>
+          <p className="mt-4" style={{ color: PALETTE.text }}>
+            Small UK-based team, focused on pet wellbeing. We minimise packaging
+            and favour useful, healthy products.
+          </p>
           <ul className="mt-6 space-y-2 text-sm" style={{ color: PALETTE.text }}>
-            <li className="flex items-start gap-2"><Leaf className="h-4 w-4 mt-0.5" style={{ color: PALETTE.accent }} /> Emballages recyclables</li>
-            <li className="flex items-start gap-2"><Truck className="h-4 w-4 mt-0.5" style={{ color: PALETTE.accent }} /> Partenaires logistiques UK</li>
-            <li className="flex items-start gap-2"><Shield className="h-4 w-4 mt-0.5" style={{ color: PALETTE.accent }} /> Satisfait ou remboursé 30 jours</li>
+            <li className="flex items-start gap-2">
+              <Leaf className="h-4 w-4 mt-0.5" style={{ color: PALETTE.accent }} /> Recyclable packaging
+            </li>
+            <li className="flex items-start gap-2">
+              <Truck className="h-4 w-4 mt-0.5" style={{ color: PALETTE.accent }} /> UK logistics partners
+            </li>
+            <li className="flex items-start gap-2">
+              <Shield className="h-4 w-4 mt-0.5" style={{ color: PALETTE.accent }} /> 30-day money-back guarantee
+            </li>
           </ul>
         </div>
-        <div className="aspect-[4/3] w-full rounded-3xl overflow-hidden border" style={{ borderColor: PALETTE.border }}>
-          <img src="https://images.unsplash.com/photo-1534361960057-19889db9621e?q=80&w=1600&auto=format&fit=crop" alt="Propriétaire et chien" className="w-full h-full object-cover" />
+        <div
+          className="aspect-[4/3] w-full rounded-3xl overflow-hidden border"
+          style={{ borderColor: PALETTE.border }}
+        >
+          <img
+            src="https://images.unsplash.com/photo-1534361960057-19889db9621e?q=80&w=1600&auto=format&fit=crop"
+            alt="Owner and dog"
+            className="w-full h-full object-cover"
+          />
         </div>
       </div>
     </section>
@@ -469,28 +685,53 @@ function Footer() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 grid md:grid-cols-4 gap-8">
         <div className="md:col-span-2">
           <div className="flex items-center gap-2">
-            <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl" style={{ background: PALETTE.accent, color: "white" }}>
+            <span
+              className="inline-flex h-9 w-9 items-center justify-center rounded-xl"
+              style={{ background: PALETTE.accent, color: "white" }}
+            >
               <PawPrint className="h-5 w-5" />
             </span>
-            <span className="font-serif text-lg" style={{ color: PALETTE.ink }}>PawBox UK</span>
+            <span className="font-serif text-lg" style={{ color: PALETTE.ink }}>
+              PawBox UK
+            </span>
           </div>
-          <p className="mt-3 text-sm max-w-md" style={{ color: PALETTE.text }}>Des box mensuelles premium, personnalisées pour le bien‑être de vos animaux. Livraison au Royaume‑Uni.</p>
-          <p className="mt-3 text-xs" style={{ color: PALETTE.subtle }}>© {new Date().getFullYear()} PawBox UK. Tous droits réservés.</p>
+          <p className="mt-3 text-sm max-w-md" style={{ color: PALETTE.text }}>
+            Premium monthly boxes, personalised for your pet’s wellbeing. UK delivery.
+          </p>
+          <p className="mt-3 text-xs" style={{ color: PALETTE.subtle }}>
+            © {new Date().getFullYear()} PawBox UK. All rights reserved.
+          </p>
         </div>
         <div>
-          <div className="font-medium" style={{ color: PALETTE.ink }}>Liens</div>
+          <div className="font-medium" style={{ color: PALETTE.ink }}>
+            Links
+          </div>
           <ul className="mt-3 space-y-2 text-sm" style={{ color: PALETTE.text }}>
-            <li><a href="#plans" className="hover:underline">Abonnements</a></li>
-            <li><a href="#personalize" className="hover:underline">Personnaliser</a></li>
-            <li><a href="#about" className="hover:underline">À propos</a></li>
+            <li>
+              <a href="#plans" className="hover:underline">
+                Plans
+              </a>
+            </li>
+            <li>
+              <a href="#personalise" className="hover:underline">
+                Personalise
+              </a>
+            </li>
+            <li>
+              <a href="#about" className="hover:underline">
+                About
+              </a>
+            </li>
           </ul>
         </div>
         <div>
-          <div className="font-medium" style={{ color: PALETTE.ink }}>Contact</div>
+          <div className="font-medium" style={{ color: PALETTE.ink }}>
+            Contact
+          </div>
           <ul className="mt-3 space-y-2 text-sm" style={{ color: PALETTE.text }}>
             <li>hello@pawbox.co.uk</li>
-            <li>Lun–Ven 9:00–17:00</li>
-            <li>UK Only</li>
+            <li>Mon–Fri 9:00–17:00</li>
+            <li>UK only</li>
           </ul>
         </div>
       </div>
@@ -513,31 +754,38 @@ function BgSoft({ images = [] }) {
   );
 }
 
-// --- Self-tests (développement) ---
+// --- Self-tests (development only) ---
 (function () {
-  const isDev = (typeof process !== "undefined" && process.env && process.env.NODE_ENV !== "production") ||
-                (typeof import.meta !== "undefined" && import.meta.env && import.meta.env.MODE !== "production");
+  const isDev =
+    (typeof process !== "undefined" &&
+      process.env &&
+      process.env.NODE_ENV !== "production") ||
+    (typeof import.meta !== "undefined" &&
+      import.meta.env &&
+      import.meta.env.MODE !== "production");
   if (!isDev) return;
   try {
     if (typeof window !== "undefined") {
       window.__PB_BGSOFT_DEFINED = (window.__PB_BGSOFT_DEFINED || 0) + 1;
-      console.assert(window.__PB_BGSOFT_DEFINED === 1, "BgSoft déclaré plusieurs fois (dupliquer la définition)");
+      console.assert(
+        window.__PB_BGSOFT_DEFINED === 1,
+        "BgSoft declared multiple times (duplicate definition)"
+      );
     }
-    console.assert(typeof BgSoft === "function", "BgSoft doit être une fonction");
+    console.assert(typeof BgSoft === "function", "BgSoft must be a function");
     const key = STRIPE_PUBLISHABLE_KEY;
-    console.assert(typeof key === "string", "La clé Stripe doit être une chaîne");
+    console.assert(typeof key === "string", "Stripe key must be a string");
   } catch (e) {
-    // ne jamais casser le rendu en prod
+    // never break render in prod
   }
 })();
 
 function SafeImg({ srcSet = [], alt = "", className = "" }) {
   const [i, setI] = useState(0);
-  // Ajoute un dernier fallback ultra-fiable (SVG inline) pour ne jamais casser la mise en page
   const fallbacks = [
     ...srcSet,
-    "https://placehold.co/1200x900?text=Image+indisponible",
-    'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900"><rect width="100%" height="100%" fill="%23f5f5f5"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%23787b80" font-family="Arial" font-size="28">Image indisponible</text></svg>'
+    "https://placehold.co/1200x900?text=Image+not+available",
+    'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900"><rect width="100%" height="100%" fill="%23f5f5f5"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%23787b80" font-family="Arial" font-size="28">Image unavailable</text></svg>',
   ];
   const src = fallbacks[i] || fallbacks[fallbacks.length - 1];
   return (
@@ -548,15 +796,19 @@ function SafeImg({ srcSet = [], alt = "", className = "" }) {
       loading="lazy"
       decoding="async"
       referrerPolicy="no-referrer"
-      onError={() => setI((prev) => (prev + 1 < fallbacks.length ? prev + 1 : prev))}
+      onError={() =>
+        setI((prev) => (prev + 1 < fallbacks.length ? prev + 1 : prev))
+      }
     />
   );
 }
 
 function Field({ label, full, children }) {
   return (
-    <label className={cx("block", full && "sm:col-span-2")}> 
-      <span className="mb-2 block text-sm font-medium" style={{ color: PALETTE.ink }}>{label}</span>
+    <label className={cx("block", full && "sm:col-span-2")}>
+      <span className="mb-2 block text-sm font-medium" style={{ color: PALETTE.ink }}>
+        {label}
+      </span>
       {children}
     </label>
   );

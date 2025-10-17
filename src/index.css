@@ -1,1 +1,2 @@
-@import "tailwindcss";
+/* src/index.css */
+@import "tailwindcss";   /* ✅ recommandé v4 */
